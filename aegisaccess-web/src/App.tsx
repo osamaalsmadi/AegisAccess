@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 type DashboardData = { totalUsers: number, totalDepartments: number, totalRoles: number, totalResources: number };
 

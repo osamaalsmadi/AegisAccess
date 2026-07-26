@@ -1,4 +1,4 @@
-﻿body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; }
 .container { display: flex; min-height: 100vh; }
 .sidebar { width: 250px; background: #1e293b; color: white; padding: 20px; }
 .sidebar h2 { margin-top: 0; }
