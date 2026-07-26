@@ -194,3 +194,206 @@ tbody tr:hover { background: #0d202a; }
   .review-item { grid-template-columns: 1fr 75px 90px; }
   .review-actions { grid-column: 1 / -1; }
 }
+/* =========================================================
+   AEGISACCESS PURE BLACK THEME V1
+   Pure black surfaces with security-green highlights.
+   ========================================================= */
+
+:root {
+  background: #000000;
+  color-scheme: dark;
+  font-size: 18px;
+}
+
+html,
+body,
+#root {
+  background: #000000;
+}
+
+body {
+  color: #e8eef2;
+  scrollbar-color: #257d63 #050505;
+}
+
+.app-shell {
+  background:
+    radial-gradient(
+      circle at 74% -12%,
+      rgba(46, 230, 173, 0.065),
+      transparent 32%
+    ),
+    #000000;
+}
+
+main {
+  background: transparent;
+}
+
+.sidebar {
+  background: rgba(2, 2, 2, 0.99);
+  border-right-color: #202523;
+  box-shadow: 18px 0 55px rgba(0, 0, 0, 0.32);
+}
+
+.brand-mark {
+  background: linear-gradient(145deg, #0d1815, #020202);
+}
+
+.environment-pill {
+  background: #06110d;
+}
+
+.nav-item:hover {
+  background: #0c0c0c;
+}
+
+.nav-item.active {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(46, 230, 173, 0.16),
+      rgba(46, 230, 173, 0.015)
+    );
+}
+
+select,
+textarea,
+input {
+  background: #090909;
+  border-color: #303836;
+}
+
+select:hover,
+textarea:hover,
+input:hover {
+  border-color: #3b5750;
+}
+
+.security-banner {
+  background: rgba(82, 57, 10, 0.18);
+}
+
+.hero-card {
+  background:
+    linear-gradient(
+      120deg,
+      rgba(15, 15, 15, 0.99),
+      rgba(2, 2, 2, 0.99)
+    );
+  border-color: #20463b;
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.52),
+    inset 0 1px rgba(255, 255, 255, 0.018);
+}
+
+.posture-score {
+  background: #050505;
+}
+
+.stat-card,
+.panel {
+  background: #080808;
+  border-color: #252d2b;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.34),
+    inset 0 1px rgba(255, 255, 255, 0.012);
+}
+
+.stat-card:hover,
+.panel:hover {
+  border-color: #30443e;
+}
+
+.request-card,
+.review-item {
+  background: #060606;
+  border-color: #252d2b;
+}
+
+.risk-column {
+  background: #030303;
+  border-left-color: #252d2b;
+}
+
+.recommendation {
+  background: #06120e;
+}
+
+.bar-track {
+  background: #171717;
+}
+
+.campaign-metrics span {
+  background: #080808;
+  border-color: #2a302f;
+}
+
+.table-shell {
+  background: #050505;
+  border-color: #292f2d;
+}
+
+th {
+  background: #101010;
+  border-bottom-color: #303735;
+}
+
+td {
+  border-bottom-color: #202624;
+}
+
+tbody tr {
+  background: #060606;
+}
+
+tbody tr:hover {
+  background: #101310;
+}
+
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.decision-modal {
+  background:
+    linear-gradient(
+      145deg,
+      #111111,
+      #030303
+    );
+  border-color: #2e6555;
+  box-shadow:
+    0 40px 140px rgba(0, 0, 0, 0.8),
+    0 0 55px rgba(46, 230, 173, 0.08);
+}
+
+::selection {
+  background: rgba(46, 230, 173, 0.28);
+  color: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+::-webkit-scrollbar-track {
+  background: #030303;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1d5747;
+  border: 3px solid #030303;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2b896d;
+}
+
+@media (max-width: 1450px) {
+  :root {
+    font-size: 17px;
+  }
+}
