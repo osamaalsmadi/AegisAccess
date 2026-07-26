@@ -397,3 +397,209 @@ tbody tr:hover {
     font-size: 17px;
   }
 }
+
+/* =========================================================
+   AEGISACCESS ULTRA BLACK THEME V2
+   ========================================================= */
+
+:root {
+  background: #000000 !important;
+  color-scheme: dark;
+  font-size: 18px;
+}
+
+html,
+body,
+#root,
+.app-shell,
+main {
+  background: #000000 !important;
+  background-image: none !important;
+}
+
+body {
+  color: #eeeeee;
+  scrollbar-color: #174c3d #000000;
+}
+
+/* Left navigation */
+.sidebar {
+  background: #000000 !important;
+  border-right: 1px solid #171b1a !important;
+  box-shadow: 15px 0 55px rgba(0, 0, 0, 0.85);
+}
+
+.brand-mark {
+  background: #030303 !important;
+}
+
+.environment-pill {
+  background: #020604 !important;
+}
+
+.sidebar-footer {
+  border-top-color: #171717 !important;
+}
+
+.nav-item:hover {
+  background: #070707 !important;
+}
+
+.nav-item.active {
+  background: rgba(46, 230, 173, 0.09) !important;
+  border-color: #1c5a48 !important;
+}
+
+/* Inputs */
+select,
+textarea,
+input {
+  background: #020202 !important;
+  border-color: #272c2a !important;
+  color: #f0f0f0 !important;
+}
+
+select:hover,
+textarea:hover,
+input:hover {
+  border-color: #356454 !important;
+}
+
+select:focus,
+textarea:focus,
+input:focus {
+  border-color: #2ee6ad !important;
+  box-shadow: 0 0 0 3px rgba(46, 230, 173, 0.08) !important;
+}
+
+/* Security message */
+.security-banner {
+  background: #030302 !important;
+}
+
+/* Dashboard hero */
+.hero-card {
+  background: #020202 !important;
+  background-image: none !important;
+  border-color: #1d322c !important;
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.9),
+    inset 0 1px rgba(255, 255, 255, 0.015) !important;
+}
+
+.posture-score {
+  background: #000000 !important;
+}
+
+/* Main cards */
+.stat-card,
+.panel {
+  background: #020202 !important;
+  background-image: none !important;
+  border-color: #181d1b !important;
+  box-shadow:
+    0 18px 60px rgba(0, 0, 0, 0.72),
+    inset 0 1px rgba(255, 255, 255, 0.012) !important;
+}
+
+.stat-card:hover,
+.panel:hover {
+  background: #030403 !important;
+  border-color: #263c35 !important;
+}
+
+/* Access requests */
+.request-card,
+.review-item {
+  background: #010101 !important;
+  border-color: #181d1b !important;
+}
+
+.risk-column {
+  background: #000000 !important;
+  border-left-color: #191d1c !important;
+}
+
+.recommendation {
+  background: #020805 !important;
+}
+
+.bar-track {
+  background: #101010 !important;
+}
+
+/* Campaigns */
+.campaign-metrics span {
+  background: #020202 !important;
+  border-color: #1d211f !important;
+}
+
+/* Tables */
+.table-shell {
+  background: #000000 !important;
+  border-color: #1b1f1d !important;
+}
+
+table {
+  background: #000000 !important;
+}
+
+th {
+  background: #050505 !important;
+  border-bottom-color: #242824 !important;
+}
+
+td {
+  background: #010101 !important;
+  border-bottom-color: #151817 !important;
+}
+
+tbody tr:hover,
+tbody tr:hover td {
+  background: #060806 !important;
+}
+
+/* Modal */
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.94) !important;
+}
+
+.decision-modal {
+  background: #020202 !important;
+  background-image: none !important;
+  border-color: #265f4d !important;
+  box-shadow:
+    0 45px 160px rgba(0, 0, 0, 0.95),
+    0 0 50px rgba(46, 230, 173, 0.055) !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #183d32;
+  border: 3px solid #000000;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #27745d;
+}
+
+::selection {
+  background: rgba(46, 230, 173, 0.3);
+  color: #ffffff;
+}
+
+@media (max-width: 1450px) {
+  :root {
+    font-size: 17px;
+  }
+}
