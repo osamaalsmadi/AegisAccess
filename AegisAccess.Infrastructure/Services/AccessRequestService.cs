@@ -1,4 +1,5 @@
 using AegisAccess.Application.AccessGovernance;
+using AegisAccess.Application.Portfolio;
 using AegisAccess.Domain.Entities;
 using AegisAccess.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -9,11 +10,16 @@ public sealed class AccessRequestService : IAccessRequestService
 {
     private readonly AegisDbContext _db;
     private readonly IAccessRiskEngine _riskEngine;
+    private readonly ISodPolicyEvaluator _sodEvaluator;
 
-    public AccessRequestService(AegisDbContext db, IAccessRiskEngine riskEngine)
+    public AccessRequestService(
+        AegisDbContext db,
+        IAccessRiskEngine riskEngine,
+        ISodPolicyEvaluator sodEvaluator)
     {
         _db = db;
         _riskEngine = riskEngine;
+        _sodEvaluator = sodEvaluator;
     }
 
     public async Task<IReadOnlyList<AccessRequestDto>> GetRequestsAsync(
@@ -21,7 +27,7 @@ public sealed class AccessRequestService : IAccessRequestService
         bool canReviewAll,
         CancellationToken cancellationToken = default)
     {
-        var normalizedActor = NormalizeUsername(actorUsername);
+        var actor = NormalizeUsername(actorUsername);
 
         var query = _db.AccessRequests
             .AsNoTracking()
@@ -34,7 +40,7 @@ public sealed class AccessRequestService : IAccessRequestService
 
         if (!canReviewAll)
         {
-            query = query.Where(request => request.Requester!.Username == normalizedActor);
+            query = query.Where(request => request.Requester!.Username == actor);
         }
 
         var requests = await query
@@ -81,52 +87,50 @@ public sealed class AccessRequestService : IAccessRequestService
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(input);
-        var normalizedActor = NormalizeUsername(actorUsername);
+        var actor = NormalizeUsername(actorUsername);
+        var justification = input.BusinessJustification?.Trim() ?? string.Empty;
 
         if (input.ResourceId == Guid.Empty || input.RequestedRoleId == Guid.Empty)
         {
-            throw new ArgumentException("A resource and requested role are required.");
+            throw new ArgumentException("A resource and role are required.");
         }
-
-        var justification = input.BusinessJustification?.Trim() ?? string.Empty;
         if (justification.Length < 15)
         {
-            throw new ArgumentException("Business justification must contain at least 15 characters.");
+            throw new ArgumentException("Business justification requires at least 15 characters.");
         }
-
         if (input.DurationDays is < 1 or > 365)
         {
-            throw new ArgumentException("Access duration must be between 1 and 365 days.");
+            throw new ArgumentException("Duration must be between 1 and 365 days.");
         }
 
         var requester = await _db.Users
-            .SingleOrDefaultAsync(user => user.Username == normalizedActor, cancellationToken)
-            ?? throw new KeyNotFoundException("The authenticated demo user was not found.");
+            .SingleOrDefaultAsync(user => user.Username == actor, cancellationToken)
+            ?? throw new KeyNotFoundException("Authenticated user was not found.");
 
         var resource = await _db.Resources
             .SingleOrDefaultAsync(item => item.Id == input.ResourceId, cancellationToken)
-            ?? throw new KeyNotFoundException("The selected resource was not found.");
+            ?? throw new KeyNotFoundException("Selected resource was not found.");
 
-        var requestedRole = await _db.Roles
+        var role = await _db.Roles
             .SingleOrDefaultAsync(item => item.Id == input.RequestedRoleId, cancellationToken)
-            ?? throw new KeyNotFoundException("The selected role was not found.");
+            ?? throw new KeyNotFoundException("Selected role was not found.");
 
-        var duplicateExists = await _db.AccessRequests.AnyAsync(
+        var duplicate = await _db.AccessRequests.AnyAsync(
             request =>
                 request.RequesterId == requester.Id &&
                 request.ResourceId == resource.Id &&
-                request.RequestedRoleId == requestedRole.Id &&
+                request.RequestedRoleId == role.Id &&
                 (request.Status == AccessRequestStatus.Pending ||
                  request.Status == AccessRequestStatus.Escalated),
             cancellationToken);
 
-        if (duplicateExists)
+        if (duplicate)
         {
-            throw new InvalidOperationException("An active request already exists for the same user, resource, and role.");
+            throw new InvalidOperationException("An active duplicate request already exists.");
         }
 
         var now = DateTime.UtcNow;
-        var privilegedAccessCount = await _db.AccessRequests.CountAsync(
+        var privilegedCount = await _db.AccessRequests.CountAsync(
             request =>
                 request.RequesterId == requester.Id &&
                 request.Status == AccessRequestStatus.Approved &&
@@ -135,44 +139,68 @@ public sealed class AccessRequestService : IAccessRequestService
                  request.RequestedRole.Name == "Approver"),
             cancellationToken);
 
-        var risk = _riskEngine.Evaluate(new AccessRiskContext(
+        var baseRisk = _riskEngine.Evaluate(new AccessRiskContext(
             resource.SensitivityLevel,
-            requestedRole.Name,
+            role.Name,
             input.DurationDays,
             justification,
-            privilegedAccessCount));
+            privilegedCount));
+
+        var conflicts = await _sodEvaluator.FindConflictsAsync(
+            requester.Id,
+            role.Id,
+            cancellationToken);
+
+        var conflictPenalty = conflicts.Count > 0 ? 35 : 0;
+        var finalScore = Math.Clamp(baseRisk.Score + conflictPenalty, 0, 100);
+        var finalLevel = finalScore switch
+        {
+            < 30 => "Low",
+            < 55 => "Medium",
+            < 75 => "High",
+            _ => "Critical"
+        };
+
+        var reasons = baseRisk.Reasons.ToList();
+        reasons.AddRange(conflicts.Select(conflict =>
+            $"SoD conflict: {conflict.ExistingRole} + {conflict.RequestedRole} violates {conflict.PolicyName}."));
+
+        var requiresSecurityAdmin = baseRisk.RequiresSecurityAdmin || conflicts.Count > 0;
+        var recommendation = conflicts.Count > 0
+            ? "Toxic role combination detected. SecurityAdmin exception review is mandatory."
+            : baseRisk.Recommendation;
 
         var request = new AccessRequest
         {
             CorrelationId = $"ACC-{now:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}",
             RequesterId = requester.Id,
             ResourceId = resource.Id,
-            RequestedRoleId = requestedRole.Id,
+            RequestedRoleId = role.Id,
             BusinessJustification = justification,
             DurationDays = input.DurationDays,
             RequestedAtUtc = now,
             AccessExpiresAtUtc = now.AddDays(input.DurationDays),
-            Status = risk.RequiresSecurityAdmin ? AccessRequestStatus.Escalated : AccessRequestStatus.Pending,
-            RiskScore = risk.Score,
-            RiskLevel = Enum.Parse<AccessRiskLevel>(risk.Level),
-            RiskReasons = string.Join("|", risk.Reasons),
-            Recommendation = risk.Recommendation
+            Status = requiresSecurityAdmin ? AccessRequestStatus.Escalated : AccessRequestStatus.Pending,
+            RiskScore = finalScore,
+            RiskLevel = Enum.Parse<AccessRiskLevel>(finalLevel),
+            RiskReasons = string.Join("|", reasons),
+            Recommendation = recommendation
         };
 
         _db.AccessRequests.Add(request);
         _db.AuditEvents.Add(new AuditEvent
         {
-            Action = "AccessRequestCreated",
-            Actor = normalizedActor,
+            Action = conflicts.Count > 0 ? "AccessRequestEscalatedBySoD" : "AccessRequestCreated",
+            Actor = actor,
             Target = request.CorrelationId,
-            Details = $"Resource={resource.Name}; Role={requestedRole.Name}; Risk={risk.Score}; Status={request.Status}"
+            Details = $"Resource={resource.Name}; Role={role.Name}; Risk={finalScore}; Conflicts={conflicts.Count}"
         });
 
         await _db.SaveChangesAsync(cancellationToken);
 
         request.Requester = requester;
         request.Resource = resource;
-        request.RequestedRole = requestedRole;
+        request.RequestedRole = role;
         return Map(request);
     }
 
@@ -184,7 +212,7 @@ public sealed class AccessRequestService : IAccessRequestService
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(input);
-        var normalizedActor = NormalizeUsername(actorUsername);
+        var actor = NormalizeUsername(actorUsername);
 
         var request = await _db.AccessRequests
             .Include(item => item.Requester)
@@ -201,34 +229,33 @@ public sealed class AccessRequestService : IAccessRequestService
         }
 
         var decider = await _db.Users
-            .SingleOrDefaultAsync(user => user.Username == normalizedActor, cancellationToken)
-            ?? throw new KeyNotFoundException("The decision user was not found.");
+            .SingleOrDefaultAsync(user => user.Username == actor, cancellationToken)
+            ?? throw new KeyNotFoundException("Decision user was not found.");
 
         if (decider.Id == request.RequesterId)
         {
             throw new UnauthorizedAccessException("Segregation of duties prevents self-approval.");
         }
 
-        var normalizedDecision = input.Decision?.Trim().ToLowerInvariant() ?? string.Empty;
-        if (normalizedDecision is not "approve" and not "reject")
+        var decision = input.Decision?.Trim().ToLowerInvariant() ?? string.Empty;
+        var comment = input.Comment?.Trim() ?? string.Empty;
+
+        if (decision is not "approve" and not "reject")
         {
             throw new ArgumentException("Decision must be Approve or Reject.");
         }
-
-        var comment = input.Comment?.Trim() ?? string.Empty;
         if (comment.Length < 5)
         {
-            throw new ArgumentException("Decision comment must contain at least 5 characters.");
+            throw new ArgumentException("Decision comment requires at least 5 characters.");
         }
-
-        if (normalizedDecision == "approve" &&
+        if (decision == "approve" &&
             request.RiskLevel == AccessRiskLevel.Critical &&
             !isSecurityAdmin)
         {
-            throw new UnauthorizedAccessException("Critical requests require SecurityAdmin approval.");
+            throw new UnauthorizedAccessException("Critical and SoD-escalated requests require SecurityAdmin approval.");
         }
 
-        request.Status = normalizedDecision == "approve"
+        request.Status = decision == "approve"
             ? AccessRequestStatus.Approved
             : AccessRequestStatus.Rejected;
         request.DecidedById = decider.Id;
@@ -241,7 +268,7 @@ public sealed class AccessRequestService : IAccessRequestService
             Action = request.Status == AccessRequestStatus.Approved
                 ? "AccessRequestApproved"
                 : "AccessRequestRejected",
-            Actor = normalizedActor,
+            Actor = actor,
             Target = request.CorrelationId,
             Details = $"Requester={request.Requester!.Username}; Resource={request.Resource!.Name}; Role={request.RequestedRole!.Name}; Comment={comment}"
         });
@@ -252,20 +279,21 @@ public sealed class AccessRequestService : IAccessRequestService
 
     private static string NormalizeUsername(string username)
     {
-        var normalized = username?.Trim().ToLowerInvariant() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(normalized))
+        var value = username?.Trim().ToLowerInvariant() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
         {
-            throw new UnauthorizedAccessException("Authenticated username is missing.");
+            throw new UnauthorizedAccessException("Authenticated identity is missing.");
         }
-
-        return normalized;
+        return value;
     }
 
     private static AccessRequestDto Map(AccessRequest request)
     {
         var reasons = string.IsNullOrWhiteSpace(request.RiskReasons)
             ? Array.Empty<string>()
-            : request.RiskReasons.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            : request.RiskReasons.Split(
+                '|',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         return new AccessRequestDto
         {

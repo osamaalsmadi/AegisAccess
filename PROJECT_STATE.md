@@ -1,10 +1,19 @@
-# AegisAccess - Phase 2 Access Governance
+# AegisAccess - Portfolio Release v1.0
 
-- Backend: ASP.NET Core 10 modular monolith
-- Database: SQLite with EF Core migrations
-- Frontend: React + TypeScript + Vite
-- Authentication: development-only persona handler
-- Authorization: RBAC policies for SecurityAdmin, Approver, Auditor, and Employee
-- Governance: access request creation, risk scoring, escalation, approval, rejection, and segregation of duties
-- Evidence: audit events for every workflow action
-- Quality: unit tests, API integration tests, frontend production build, and dependency vulnerability scan
+Status: Portfolio feature-complete and locally verified.
+
+Core modules:
+- Dynamic governance dashboard
+- Identity and resource inventory
+- RBAC authorization
+- Risk-aware access requests
+- SoD conflict detection
+- Approval and rejection workflow
+- Access review campaigns
+- Certify, Revoke, and Escalate decisions
+- CSV evidence export
+- Audit event evidence
+- Automated tests and vulnerability scanning
+
+Production boundary:
+Demo authentication remains local-only and Production startup is blocked.

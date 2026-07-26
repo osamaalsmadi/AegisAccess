@@ -1,24 +1,25 @@
 using AegisAccess.Application.AccessGovernance;
 using AegisAccess.Application.Interfaces;
+using AegisAccess.Application.Portfolio;
 using AegisAccess.Infrastructure.Persistence;
 using AegisAccess.Infrastructure.Services;
 using AegisAccess.Api.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.RateLimiting;
-using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 if (builder.Environment.IsProduction())
 {
-    throw new InvalidOperationException("Application is set to Production but uses Demo configuration. Halting startup.");
+    throw new InvalidOperationException("Demo authentication cannot run in Production.");
 }
 
-var dbFolder = Path.Combine(builder.Environment.ContentRootPath, "..", "data");
-Directory.CreateDirectory(dbFolder);
-var dbPath = Path.Combine(dbFolder, "aegisaccess.dev.db");
-builder.Services.AddDbContext<AegisDbContext>(options => options.UseSqlite($"Data Source={dbPath}"));
+var databaseDirectory = Path.Combine(builder.Environment.ContentRootPath, "..", "data");
+Directory.CreateDirectory(databaseDirectory);
+var databasePath = Path.Combine(databaseDirectory, "aegisaccess.dev.db");
+builder.Services.AddDbContext<AegisDbContext>(
+    options => options.UseSqlite($"Data Source={databasePath}"));
 
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -28,7 +29,9 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IResourceService, ResourceService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddSingleton<IAccessRiskEngine, AccessRiskEngine>();
+builder.Services.AddScoped<ISodPolicyEvaluator, SodPolicyEvaluator>();
 builder.Services.AddScoped<IAccessRequestService, AccessRequestService>();
+builder.Services.AddScoped<IPortfolioGovernanceService, PortfolioGovernanceService>();
 
 builder.Services
     .AddAuthentication("DemoAuth")
@@ -47,10 +50,12 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddRateLimiter(options =>
 {
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddFixedWindowLimiter("Api", limiter =>
     {
         limiter.Window = TimeSpan.FromSeconds(10);
         limiter.PermitLimit = 100;
+        limiter.QueueLimit = 0;
     });
 });
 
@@ -59,6 +64,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireAdmin", policy => policy.RequireRole("SecurityAdmin"));
     options.AddPolicy("RequireAudit", policy => policy.RequireRole("SecurityAdmin", "Auditor"));
     options.AddPolicy("RequireApprover", policy => policy.RequireRole("SecurityAdmin", "Approver"));
+    options.AddPolicy(
+        "RequireGovernanceRead",
+        policy => policy.RequireRole("SecurityAdmin", "Approver", "Auditor"));
 });
 
 builder.Services.AddControllers();
@@ -82,22 +90,23 @@ app.UseCors("StrictReact");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+app.MapControllers().RequireRateLimiting("Api");
 app.MapHealthChecks("/health");
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AegisDbContext>();
+    var database = scope.ServiceProvider.GetRequiredService<AegisDbContext>();
 
     if (app.Environment.IsEnvironment("Testing"))
     {
-        await db.Database.EnsureCreatedAsync();
+        await database.Database.EnsureCreatedAsync();
     }
 
     try
     {
-        await DataSeeder.SeedAsync(db);
-        await AccessGovernanceSeeder.SeedAsync(db);
+        await DataSeeder.SeedAsync(database);
+        await AccessGovernanceSeeder.SeedAsync(database);
+        await PortfolioSeeder.SeedAsync(database);
     }
     catch (Exception exception)
     {

@@ -1,31 +1,38 @@
 # AegisAccess
 
-AegisAccess is a lightweight Identity Governance and Administration security platform built with ASP.NET Core, Entity Framework Core, SQLite, React, and TypeScript.
+AegisAccess is a full-stack Identity Governance and Administration portfolio platform.
 
-## Implemented
-- Modular monolith architecture
-- Role-based authorization
-- Development-only demo identities
-- Classified resources and governance roles
-- Time-limited access requests
-- Deterministic risk scoring
-- Critical-risk escalation
-- Approval and rejection workflow
-- Segregation of duties
+## Technology
+- ASP.NET Core 10
+- Entity Framework Core
+- SQLite
+- React
+- TypeScript
+- Vite
+- xUnit
+
+## Security Modules
+- RBAC and persona-based authorization
+- Risk-aware access requests
+- SoD toxic-combination detection
+- Critical escalation
+- Self-approval prevention
+- Access review campaigns
+- Certification and revocation
+- Dynamic posture analytics
 - Audit evidence
-- Automated unit and integration tests
+- CSV exports
+- Rate limiting and strict CORS
 - Dependency vulnerability scanning
 
-## Local Run
-
-API:
+## Run API
 `dotnet run --project AegisAccess.Api --no-launch-profile --urls http://localhost:5091`
 
-Web:
+## Run Web
 `cd aegisaccess-web`
 `npm.cmd run dev`
 
 Open `http://localhost:5173`.
 
-## Security Notice
-Demo header authentication is strictly for local development. Production startup is intentionally blocked until OIDC/JWT authentication is implemented.
+## Security Boundary
+Demo header authentication is local-only. The API intentionally refuses Production startup until OIDC/JWT is implemented.

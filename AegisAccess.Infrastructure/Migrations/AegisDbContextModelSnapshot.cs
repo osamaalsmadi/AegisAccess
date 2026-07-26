@@ -96,6 +96,89 @@ namespace AegisAccess.Infrastructure.Migrations
                     b.ToTable("AccessRequests");
                 });
 
+            modelBuilder.Entity("AegisAccess.Domain.Entities.AccessReviewCampaign", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedByUsername")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DueAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("Status", "DueAtUtc");
+
+                    b.ToTable("AccessReviewCampaigns");
+                });
+
+            modelBuilder.Entity("AegisAccess.Domain.Entities.AccessReviewItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AccessRequestId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CampaignId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ReviewComment")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReviewedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReviewerUsername")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RiskAtReview")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccessRequestId");
+
+                    b.HasIndex("CampaignId", "AccessRequestId")
+                        .IsUnique();
+
+                    b.ToTable("AccessReviewItems");
+                });
+
             modelBuilder.Entity("AegisAccess.Domain.Entities.AuditEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -236,6 +319,52 @@ namespace AegisAccess.Infrastructure.Migrations
                     b.ToTable("RolePermissions");
                 });
 
+            modelBuilder.Entity("AegisAccess.Domain.Entities.SodPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("FirstRoleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SecondRoleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("SecondRoleId");
+
+                    b.HasIndex("FirstRoleId", "SecondRoleId")
+                        .IsUnique();
+
+                    b.ToTable("SodPolicies");
+                });
+
             modelBuilder.Entity("AegisAccess.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -321,6 +450,25 @@ namespace AegisAccess.Infrastructure.Migrations
                     b.Navigation("Resource");
                 });
 
+            modelBuilder.Entity("AegisAccess.Domain.Entities.AccessReviewItem", b =>
+                {
+                    b.HasOne("AegisAccess.Domain.Entities.AccessRequest", "AccessRequest")
+                        .WithMany()
+                        .HasForeignKey("AccessRequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AegisAccess.Domain.Entities.AccessReviewCampaign", "Campaign")
+                        .WithMany("Items")
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AccessRequest");
+
+                    b.Navigation("Campaign");
+                });
+
             modelBuilder.Entity("AegisAccess.Domain.Entities.RolePermission", b =>
                 {
                     b.HasOne("AegisAccess.Domain.Entities.Permission", "Permission")
@@ -338,6 +486,25 @@ namespace AegisAccess.Infrastructure.Migrations
                     b.Navigation("Permission");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("AegisAccess.Domain.Entities.SodPolicy", b =>
+                {
+                    b.HasOne("AegisAccess.Domain.Entities.Role", "FirstRole")
+                        .WithMany()
+                        .HasForeignKey("FirstRoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AegisAccess.Domain.Entities.Role", "SecondRole")
+                        .WithMany()
+                        .HasForeignKey("SecondRoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FirstRole");
+
+                    b.Navigation("SecondRole");
                 });
 
             modelBuilder.Entity("AegisAccess.Domain.Entities.User", b =>
@@ -368,6 +535,11 @@ namespace AegisAccess.Infrastructure.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AegisAccess.Domain.Entities.AccessReviewCampaign", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("AegisAccess.Domain.Entities.Department", b =>
