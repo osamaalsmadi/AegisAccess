@@ -1,4 +1,4 @@
-﻿data/
+data/
 *.db
 bin/
 obj/
@@ -7,3 +7,4 @@ node_modules/
 .vs/
 .vscode/
 appsettings.Development.json
+aegisaccess-web/dist/
