@@ -1,4 +1,6 @@
-﻿# Next Steps (Phase 2)
-1. Add Keycloak Docker integration.
-2. Replace DemoAuth with OIDC/JWT Validation.
-3. Migrate SQLite to PostgreSQL.
+# Next Step - Phase 3
+
+1. Add entitlement review campaigns and access recertification.
+2. Add policy violations and toxic role-combination detection.
+3. Add governance analytics, filters, and evidence export.
+4. Replace demo authentication with OIDC/JWT when the machine is ready for the identity-provider phase.

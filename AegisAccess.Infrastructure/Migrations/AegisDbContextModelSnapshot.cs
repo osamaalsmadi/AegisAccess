@@ -17,6 +17,85 @@ namespace AegisAccess.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
 
+            modelBuilder.Entity("AegisAccess.Domain.Entities.AccessRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AccessExpiresAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BusinessJustification")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CorrelationId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DecidedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DecidedById")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DecisionComment")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DurationDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Recommendation")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("RequestedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RequestedRoleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RequesterId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ResourceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RiskLevel")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RiskReasons")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RiskScore")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CorrelationId")
+                        .IsUnique();
+
+                    b.HasIndex("DecidedById");
+
+                    b.HasIndex("RequestedRoleId");
+
+                    b.HasIndex("RequesterId", "Status");
+
+                    b.HasIndex("ResourceId", "RequestedRoleId");
+
+                    b.ToTable("AccessRequests");
+                });
+
             modelBuilder.Entity("AegisAccess.Domain.Entities.AuditEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -206,6 +285,40 @@ namespace AegisAccess.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("UserRoles");
+                });
+
+            modelBuilder.Entity("AegisAccess.Domain.Entities.AccessRequest", b =>
+                {
+                    b.HasOne("AegisAccess.Domain.Entities.User", "DecidedBy")
+                        .WithMany()
+                        .HasForeignKey("DecidedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AegisAccess.Domain.Entities.Role", "RequestedRole")
+                        .WithMany()
+                        .HasForeignKey("RequestedRoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AegisAccess.Domain.Entities.User", "Requester")
+                        .WithMany()
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AegisAccess.Domain.Entities.Resource", "Resource")
+                        .WithMany()
+                        .HasForeignKey("ResourceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DecidedBy");
+
+                    b.Navigation("RequestedRole");
+
+                    b.Navigation("Requester");
+
+                    b.Navigation("Resource");
                 });
 
             modelBuilder.Entity("AegisAccess.Domain.Entities.RolePermission", b =>

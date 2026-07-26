@@ -1,6 +1,10 @@
-﻿# AegisAccess - Phase 1 Lightweight Local Foundation
-* **Backend:** ASP.NET Core 10 (Modular Monolith)
-* **Database:** SQLite (Development only)
-* **Auth:** Dev-Only Demo Handler (X-Demo-User header)
-* **Frontend:** React + Vite
-* **Status:** Passed Build, Unit Tests, Integration Tests (401, 403, 200), and Live API checks.
+# AegisAccess - Phase 2 Access Governance
+
+- Backend: ASP.NET Core 10 modular monolith
+- Database: SQLite with EF Core migrations
+- Frontend: React + TypeScript + Vite
+- Authentication: development-only persona handler
+- Authorization: RBAC policies for SecurityAdmin, Approver, Auditor, and Employee
+- Governance: access request creation, risk scoring, escalation, approval, rejection, and segregation of duties
+- Evidence: audit events for every workflow action
+- Quality: unit tests, API integration tests, frontend production build, and dependency vulnerability scan
