@@ -35,4 +35,24 @@ AegisAccess is a full-stack Identity Governance and Administration portfolio pla
 Open `http://localhost:5173`.
 
 ## Security Boundary
-Demo header authentication is local-only. The API intentionally refuses Production startup until OIDC/JWT is implemented.
+
+
+## Screenshots
+
+### Dashboard
+![AegisAccess dashboard](screenshots/dashboard-overview.jpeg)
+
+### Risk & Governance Activity
+![Risk distribution and governance activity](screenshots/dashboard-risk-activity.jpeg)
+
+### Adaptive Access Requests
+![Create an adaptive access request](screenshots/access-request-form.jpeg)
+
+### Access Request Evidence
+![Risk-aware access request decision queue](screenshots/access-request-evidence.jpeg)
+
+### Access Review Campaigns
+![Privileged access certification campaign](screenshots/review-campaign-decision.jpeg)
+
+### Policy Center
+![Segregation of duties policy center](screenshots/policy-center.jpeg)
