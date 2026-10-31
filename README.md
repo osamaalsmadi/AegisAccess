@@ -1,5 +1,8 @@
 # AegisAccess
 
+[Browse project files](#explore-the-project)
+
+
 AegisAccess is a full-stack Identity Governance and Administration portfolio platform.
 
 ## Technology
@@ -36,6 +39,8 @@ Open `http://localhost:5173`.
 
 ## Security Boundary
 
+See the [security decisions](docs/security-decisions.md) and [threat model](docs/threat-model.md) for the documented security assumptions.
+
 
 ## Screenshots
 
@@ -56,3 +61,12 @@ Open `http://localhost:5173`.
 
 ### Policy Center
 ![Segregation of duties policy center](screenshots/policy-center.jpeg)
+
+## Explore the project
+
+- [AegisAccess.sln](AegisAccess.sln)
+- [aegisaccess-web/index.html](aegisaccess-web/index.html)
+- [aegisaccess-web/package.json](aegisaccess-web/package.json)
+- [docs/architecture.md](docs/architecture.md)
+- [docs/security-decisions.md](docs/security-decisions.md)
+- [docs/threat-model.md](docs/threat-model.md)
